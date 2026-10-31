@@ -501,3 +501,4 @@ button.item:hover { background: color-mix(in srgb, var(--bg-sunken) 60%, transpa
 
 .steps-list li > span { min-width: 0; padding-top: 2px; }
 @media (max-width: 430px) { .panel-head .segbar button .ic { display: none; } .panel-head .segbar button { font-size: 0.84rem; } }
+.panel-scroll > *, .modal-body > *, .stack > * { flex-shrink: 0; }

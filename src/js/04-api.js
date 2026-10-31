@@ -98,14 +98,27 @@ async function routeIGN(pts, o = {}) {
   });
   if (pts.length > 2) q.set('intermediates', pts.slice(1, -1).map(ll).join('|'));
   const avoid = o.terrain === 'sentiers' ? 4 : o.terrain === 'roulant' ? 2 : 3;
-  const withC = new URLSearchParams(q);
-  withC.set('constraints', JSON.stringify({ constraintType: 'avoid', key: 'importance', operator: '<=', value: avoid }));
+  const base = API.ign + '/navigation/itineraire?';
+  const get = (params, timeout) => fetchJSON(base + params.toString(), null, { lim: LIM.ign, timeout, retries: 1 });
   let j;
-  try {
-    j = await fetchJSON(API.ign + '/navigation/itineraire?' + withC.toString(), null, { lim: LIM.ign, timeout: 35000 });
-  } catch (e) {
-    if (e.status && e.status >= 400 && e.status < 500 && e.status !== 429) j = await fetchJSON(API.ign + '/navigation/itineraire?' + q.toString(), null, { lim: LIM.ign, timeout: 35000 });
-    else throw e;
+  if (ignConstraints) {
+    const withC = new URLSearchParams(q);
+    withC.set('constraints', JSON.stringify({ constraintType: 'avoid', key: 'importance', operator: '<=', value: avoid }));
+    try { j = await get(withC, 35000); } catch (e) {
+      // contrainte refusée : on n'en enverra plus pendant la session
+      if (e.status && e.status >= 400 && e.status < 500 && e.status !== 429) ignConstraints = false;
+      else if (e.code !== 'timeout' && !(e.status >= 500)) throw e;
+    }
+  }
+  if (!j) {
+    try { j = await get(q, 35000); } catch (e) {
+      if (e.code !== 'timeout' && !(e.status >= 500)) throw e;
+      // moteur pgRouting lent ou indisponible : Valhalla (sans nature des voies)
+      const v = new URLSearchParams(q);
+      v.set('resource', 'bdtopo-valhalla');
+      v.set('waysAttributes', 'name');
+      j = await get(v, 30000);
+    }
   }
   return parseIGN(j);
 }
@@ -160,6 +173,7 @@ function parseORS(j) {
 
 /* --- Altitude --- */
 let ignPostOK = true;
+let ignConstraints = true;
 async function elevations(pts, prov) {
   prov = prov || providerFor(pts[0]);
   if (!pts.length) return [];
@@ -228,7 +242,7 @@ async function zFor(pts, prov, zKnown) {
   if (zKnown && zKnown.length === pts.length && zKnown.every((v) => Number.isFinite(v))) return zKnown;
   const cum = cumDist(pts);
   const L = cum[cum.length - 1];
-  const step = Math.max(15, L / 4000);
+  const step = ignPostOK || prov === 'ors' ? Math.max(15, L / 4000) : Math.max(25, L / 1200);
   const rs = resample(pts, step, cum);
   const zs = await elevations(rs.pts, prov);
   return interp(rs.d, zs, cum);

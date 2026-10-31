@@ -218,7 +218,9 @@ async function nameRoutes(list, token) {
     const n = await placeName(p);
     if (S.gen.token !== token || !n) continue;
     const short = n.length > 26 ? n.slice(0, 25) + '…' : n;
-    r.name = r.kind === 'cote' ? `Côte vers ${short}` : `Par ${short}`;
+    let name = r.kind === 'cote' ? `Côte vers ${short}` : `Par ${short}`;
+    if (list.some((o) => o !== r && o.name === name)) name += ' · ' + 'ABC'[list.indexOf(r)];
+    r.name = name;
     render();
   }
 }

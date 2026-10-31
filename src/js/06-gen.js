@@ -64,7 +64,8 @@ async function generateLoops(spec, start, ui) {
   if (needKey(prov)) throw new ApiError('Hors de France : ajoute ta clé OpenRouteService dans les réglages', 'key');
   if (spec.shape === 'ar') return generateOutBack(spec, start, prov, ui);
   const D = spec.D, H = spec.H;
-  const tau = spec.terrain === 'roulant' ? 1.22 : 1.32;
+  // sinuosité des sentiers (mesurée sur l'IGN à la Sainte-Baume : ~1,5 ; l'ajustement corrige ensuite)
+  const tau = spec.terrain === 'roulant' ? 1.3 : spec.terrain === 'mixte' ? 1.38 : 1.45;
   const r0 = clamp(D / (2 * Math.PI * tau), 150, 15000);
   ui.step('Lecture du relief autour du départ', 0.05);
   const DIRS = 12, K = 16;
@@ -155,7 +156,7 @@ function finalizeSet(list, spec) {
 
 /* --- Allers-retours --- */
 async function generateOutBack(spec, start, prov, ui) {
-  const tau = spec.terrain === 'roulant' ? 1.18 : 1.28;
+  const tau = spec.terrain === 'roulant' ? 1.25 : 1.35;
   const L = clamp(spec.D / 2 / tau, 150, 30000);
   ui.step('Lecture du relief autour du départ', 0.05);
   const DIRS = 12, N = 8;
