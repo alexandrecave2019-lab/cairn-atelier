@@ -1,5 +1,5 @@
 /* CAIRN Atelier : l'application reste disponible sans réseau (les cartes et calculs demandent une connexion). */
-const CACHE = 'atelier-1.0.1';
+const CACHE = 'atelier-1.0.2';
 const SHELL = ['./', './index.html', './manifest.webmanifest', './icon.svg', './icon-192.png'];
 self.addEventListener('install', (e) => {
   self.skipWaiting();
