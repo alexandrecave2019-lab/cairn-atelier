@@ -1,0 +1,4 @@
+dist/
+test/shots/
+test/out*.json
+__pycache__/
