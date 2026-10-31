@@ -1396,6 +1396,7 @@ button.item:hover { background: color-mix(in srgb, var(--bg-sunken) 60%, transpa
 
 .steps-list li > span { min-width: 0; padding-top: 2px; }
 @media (max-width: 430px) { .panel-head .segbar button .ic { display: none; } .panel-head .segbar button { font-size: 0.84rem; } }
+.panel-scroll > *, .modal-body > *, .stack > * { flex-shrink: 0; }
 
 </style>
 </head>
@@ -2223,14 +2224,27 @@ async function routeIGN(pts, o = {}) {
   });
   if (pts.length > 2) q.set('intermediates', pts.slice(1, -1).map(ll).join('|'));
   const avoid = o.terrain === 'sentiers' ? 4 : o.terrain === 'roulant' ? 2 : 3;
-  const withC = new URLSearchParams(q);
-  withC.set('constraints', JSON.stringify({ constraintType: 'avoid', key: 'importance', operator: '<=', value: avoid }));
+  const base = API.ign + '/navigation/itineraire?';
+  const get = (params, timeout) => fetchJSON(base + params.toString(), null, { lim: LIM.ign, timeout, retries: 1 });
   let j;
-  try {
-    j = await fetchJSON(API.ign + '/navigation/itineraire?' + withC.toString(), null, { lim: LIM.ign, timeout: 35000 });
-  } catch (e) {
-    if (e.status && e.status >= 400 && e.status < 500 && e.status !== 429) j = await fetchJSON(API.ign + '/navigation/itineraire?' + q.toString(), null, { lim: LIM.ign, timeout: 35000 });
-    else throw e;
+  if (ignConstraints) {
+    const withC = new URLSearchParams(q);
+    withC.set('constraints', JSON.stringify({ constraintType: 'avoid', key: 'importance', operator: '<=', value: avoid }));
+    try { j = await get(withC, 35000); } catch (e) {
+      // contrainte refusée : on n'en enverra plus pendant la session
+      if (e.status && e.status >= 400 && e.status < 500 && e.status !== 429) ignConstraints = false;
+      else if (e.code !== 'timeout' && !(e.status >= 500)) throw e;
+    }
+  }
+  if (!j) {
+    try { j = await get(q, 35000); } catch (e) {
+      if (e.code !== 'timeout' && !(e.status >= 500)) throw e;
+      // moteur pgRouting lent ou indisponible : Valhalla (sans nature des voies)
+      const v = new URLSearchParams(q);
+      v.set('resource', 'bdtopo-valhalla');
+      v.set('waysAttributes', 'name');
+      j = await get(v, 30000);
+    }
   }
   return parseIGN(j);
 }
@@ -2285,6 +2299,7 @@ function parseORS(j) {
 
 /* --- Altitude --- */
 let ignPostOK = true;
+let ignConstraints = true;
 async function elevations(pts, prov) {
   prov = prov || providerFor(pts[0]);
   if (!pts.length) return [];
@@ -2353,7 +2368,7 @@ async function zFor(pts, prov, zKnown) {
   if (zKnown && zKnown.length === pts.length && zKnown.every((v) => Number.isFinite(v))) return zKnown;
   const cum = cumDist(pts);
   const L = cum[cum.length - 1];
-  const step = Math.max(15, L / 4000);
+  const step = ignPostOK || prov === 'ors' ? Math.max(15, L / 4000) : Math.max(25, L / 1200);
   const rs = resample(pts, step, cum);
   const zs = await elevations(rs.pts, prov);
   return interp(rs.d, zs, cum);
@@ -2603,7 +2618,8 @@ async function generateLoops(spec, start, ui) {
   if (needKey(prov)) throw new ApiError('Hors de France : ajoute ta clé OpenRouteService dans les réglages', 'key');
   if (spec.shape === 'ar') return generateOutBack(spec, start, prov, ui);
   const D = spec.D, H = spec.H;
-  const tau = spec.terrain === 'roulant' ? 1.22 : 1.32;
+  // sinuosité des sentiers (mesurée sur l'IGN à la Sainte-Baume : ~1,5 ; l'ajustement corrige ensuite)
+  const tau = spec.terrain === 'roulant' ? 1.3 : spec.terrain === 'mixte' ? 1.38 : 1.45;
   const r0 = clamp(D / (2 * Math.PI * tau), 150, 15000);
   ui.step('Lecture du relief autour du départ', 0.05);
   const DIRS = 12, K = 16;
@@ -2694,7 +2710,7 @@ function finalizeSet(list, spec) {
 
 /* --- Allers-retours --- */
 async function generateOutBack(spec, start, prov, ui) {
-  const tau = spec.terrain === 'roulant' ? 1.18 : 1.28;
+  const tau = spec.terrain === 'roulant' ? 1.25 : 1.35;
   const L = clamp(spec.D / 2 / tau, 150, 30000);
   ui.step('Lecture du relief autour du départ', 0.05);
   const DIRS = 12, N = 8;
@@ -3051,7 +3067,7 @@ function parseGPX(text) {
    État de l'Atelier et enregistrement local (tout reste sur l'appareil).
    ========================================================================= */
 
-const APP_VERSION = '1.0.0';
+const APP_VERSION = '1.0.1';
 const CAIRN_URL = 'https://claude.ai/artifact/17z7YGzWzaqGGUbwNtn7N4';
 const LS = { settings: 'atelier:settings', saved: 'atelier:saved', race: 'atelier:race', start: 'atelier:start', brief: 'atelier:brief', manual: 'atelier:manual', view: 'atelier:view' };
 
@@ -3946,7 +3962,9 @@ async function nameRoutes(list, token) {
     const n = await placeName(p);
     if (S.gen.token !== token || !n) continue;
     const short = n.length > 26 ? n.slice(0, 25) + '…' : n;
-    r.name = r.kind === 'cote' ? `Côte vers ${short}` : `Par ${short}`;
+    let name = r.kind === 'cote' ? `Côte vers ${short}` : `Par ${short}`;
+    if (list.some((o) => o !== r && o.name === name)) name += ' · ' + 'ABC'[list.indexOf(r)];
+    r.name = name;
     render();
   }
 }
