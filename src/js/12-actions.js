@@ -569,6 +569,15 @@ const ACTIONS = {
   'open-saved': (d) => { const o = S.saved.find((x) => x.id === d.id); if (!o) return; try { S.view = unpackRoute(o); } catch (e) { toast('Parcours illisible'); return; } render(); fitPts(S.view.pts); },
   'view-close': () => { S.view = null; render(); },
   'del-saved': (d) => { S.saved = S.saved.filter((o) => o.id !== d.id); saveSaved(); S.view = null; render(); toast('Parcours supprimé'); },
+  install: async () => {
+    const e = INSTALL.evt;
+    if (!e) { S.ui.modal = 'settings'; S.ui.folds.install = true; render(); return; }
+    e.prompt();
+    try { const r = await e.userChoice; if (r && r.outcome === 'accepted') S.ui.canInstall = false; } catch (err) { /* rien */ }
+    INSTALL.evt = null;
+    render();
+  },
+  'install-later': () => { lsSet('atelier:install-later', String(Date.now())); render(); },
   'set-engine': (d) => { S.settings.engine = d.v; saveSettings(); render(); },
   'set-theme': (d) => { S.settings.theme = d.v; saveSettings(); applyTheme(); MAP.sig = {}; render(); },
   'ors-test': async () => {

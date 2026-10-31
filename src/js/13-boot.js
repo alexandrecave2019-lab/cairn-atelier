@@ -2,6 +2,8 @@
    Démarrage
    ========================================================================= */
 
+const INSTALL = { evt: null };
+function isStandalone() { return (window.matchMedia && matchMedia('(display-mode: standalone)').matches) || navigator.standalone === true; }
 function loadBrief(b) {
   S.brief = b;
   lsPut(LS.brief, b);
@@ -48,6 +50,13 @@ function boot() {
   if (!lsJSON(LS.view, null) && S.start) focusPoint(S.start.p, 13);
   if (window.matchMedia) window.matchMedia('(prefers-color-scheme: dark)').addEventListener?.('change', () => { MAP.sig = {}; syncMap(); });
   if ('serviceWorker' in navigator && location.protocol === 'https:') navigator.serviceWorker.register('sw.js').catch(() => {});
+  window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    INSTALL.evt = e;
+    S.ui.canInstall = true;
+    render();
+  });
+  window.addEventListener('appinstalled', () => { INSTALL.evt = null; S.ui.canInstall = false; toast('Atelier installé : il est sur ton écran d’accueil'); });
 }
 if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
 else boot();

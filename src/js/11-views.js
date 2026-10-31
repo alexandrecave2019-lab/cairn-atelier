@@ -51,11 +51,17 @@ function Panel() {
   return html`<section class="panel" data-key="panel">
     <button class="grip" data-act="sheet-cycle" aria-label="Agrandir ou réduire le panneau"><span></span></button>
     <div class="panel-head"><div class="segbar" role="tablist">${MODES.map((m) => html`<button role="tab" data-act="mode" data-mode="${m.id}" aria-pressed="${S.mode === m.id ? 'true' : 'false'}">${icon(m.ic)}<span>${m.label}</span></button>`)}</div></div>
-    <div class="panel-scroll" data-key="scroll-${S.mode}">${body}<p class="foot-credits">Cartes et itinéraires : IGN Géoplateforme · OpenStreetMap · OpenRouteService</p></div>
+    <div class="panel-scroll" data-key="scroll-${S.mode}">${InstallCard()}${body}<p class="foot-credits">Cartes et itinéraires : IGN Géoplateforme · OpenStreetMap · OpenRouteService</p></div>
   </section>`;
 }
 
 /* ---------- Séance ---------- */
+function InstallCard() {
+  if (!S.ui.canInstall || isStandalone()) return '';
+  const later = num(lsGet('atelier:install-later'));
+  if (later && Date.now() - later < 7 * 86400000) return '';
+  return html`<div class="card install-card"><span class="ticon">${icon('download')}</span><span class="grow small"><b>Installer l'Atelier</b><br><span class="muted">Plein écran, avec son icône, comme une appli.</span></span><button class="btn btn-sm btn-primary" data-act="install">Installer</button><button class="icon-btn" data-act="install-later" aria-label="Plus tard">${icon('x')}</button></div>`;
+}
 function SeancePanel() {
   const g = S.gen;
   const spec = currentSpec();
@@ -373,6 +379,9 @@ function SettingsModal() {
     </section>
     <section class="stack"><div class="label">Lieux enregistrés</div>
       ${st.places.length ? html`<div class="list">${st.places.map((pl) => html`<div class="item"><span class="ticon">${icon('home')}</span><span class="item-title">${pl.name}</span><button class="icon-btn" data-act="place-del" data-id="${pl.id}" aria-label="Supprimer ${pl.name}">${icon('trash')}</button></div>`)}</div>` : html`<p class="small muted">Aucun lieu. Choisis un départ puis « Enregistrer ».</p>`}
+    </section>
+    <section class="stack"><div class="label">Appli sur le téléphone</div>
+      ${isStandalone() ? html`<p class="small ok-ic">${icon('check', 'ic-sm')} L'Atelier est installé.</p>` : S.ui.canInstall ? html`<button class="btn btn-secondary btn-block" data-act="install">${icon('download')}Installer l'Atelier</button>` : html`<ol class="steps-list"><li><span><b>Android (Chrome)</b> : menu ⋮ → <b>Installer l'application</b> (ou « Ajouter à l'écran d'accueil »).</span></li><li><span><b>iPhone (Safari)</b> : bouton Partager → <b>Sur l'écran d'accueil</b>.</span></li></ol>`}
     </section>
     <section class="stack"><div class="label">Thème</div>
       <div class="segbar sm">${[['auto', 'Auto'], ['light', 'Clair'], ['dark', 'Sombre']].map(([k, l]) => html`<button data-act="set-theme" data-v="${k}" aria-pressed="${(st.theme || 'auto') === k ? 'true' : 'false'}">${l}</button>`)}</div>
