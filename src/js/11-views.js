@@ -5,7 +5,7 @@
 const MODES = [
   { id: 'seance', label: 'Séance', ic: 'target' },
   { id: 'main', label: 'À la main', ic: 'hand' },
-  { id: 'course', label: 'Course', ic: 'flag' },
+  { id: 'course', label: 'Reco', ic: 'flag' },
   { id: 'mes', label: 'Enregistrés', ic: 'save' },
 ];
 const SLOT = ['a', 'b', 'c'];
@@ -16,7 +16,7 @@ function App() {
 
 function TopBar() {
   const b = S.brief;
-  const titles = { seance: b ? b.title : 'Parcours sur mesure', main: 'Tracé à la main', course: S.race ? S.race.name : 'Ta course', mes: 'Mes parcours' };
+  const titles = { seance: b ? b.title : 'Parcours sur mesure', main: 'Tracé à la main', course: S.race ? 'Reco · ' + S.race.name : 'Reco du parcours', mes: 'Mes parcours' };
   const sub = S.mode === 'seance' && b ? [b.date ? fmtDay(b.date) : '', 'séance CAIRN'].filter(Boolean).join(' · ') : 'Atelier parcours';
   const back = (b && b.back) || CAIRN_URL;
   return html`<header class="topbar">
@@ -290,7 +290,7 @@ function CoursePanel() {
   const rc = S.race;
   if (S.ui.raceBusy) return Progress('Lecture du tracé de la course', 0.4);
   if (!rc) {
-    return html`<div class="empty">${icon('flag')}<b>Importe le tracé de ta course</b><p class="small">Le fichier GPX se trouve en général sur la page de l'épreuve (site de l'organisateur, Tracedetrail, Livetrail…).</p></div>
+    return html`<div class="empty">${icon('flag')}<b>Reco du parcours de ta course</b><p class="small">Importe le tracé officiel (fichier GPX) : l'Atelier repère les montées clés et te propose des sorties sur des tronçons du vrai parcours. Le fichier se trouve en général sur la page de l'épreuve (site de l'organisateur, Tracedetrail, Livetrail…).</p></div>
       <label class="btn btn-primary btn-block">${icon('upload')}Choisir le fichier GPX<input type="file" accept=".gpx,application/gpx+xml,application/xml,text/xml" data-file="race" hidden></label>`;
   }
   const spec = currentSpec();
@@ -302,7 +302,7 @@ function CoursePanel() {
   if (P.a != null && P.b != null && P.b > P.a) bands.push({ from: P.a * 1000, to: P.b * 1000, cls: 'sel-band' });
   return html`
     <section class="card stack">
-      <div class="spread"><span class="stack" style="gap:2px;min-width:0"><span class="label">Ta course</span><b>${rc.name}</b></span><button class="icon-btn" data-act="race-remove" aria-label="Retirer la course">${icon('trash')}</button></div>
+      <div class="spread"><span class="stack" style="gap:2px;min-width:0"><span class="label">Parcours de ta course</span><b>${rc.name}</b></span><button class="icon-btn" data-act="race-remove" aria-label="Retirer la course">${icon('trash')}</button></div>
       <span class="mx-row lg">${mx('dist', fmtKm1(rc.dist))}${mx('dplus', fmtNum(rc.dplus) + ' m D+')}${mx('reps', rc.climbs.length + ' montées clés')}</span>
       ${Profile(raceView, { bands, ctx: 'racefull' })}
       ${Fold('climbs', 'Montées clés', html`<div>${rc.climbs.map((c, i) => html`<div class="climb-row"><span class="n">${i + 1}</span><span>km ${String(round(c.from / 1000, 1)).replace('.', ',')} → ${String(round(c.to / 1000, 1)).replace('.', ',')}<br><span class="muted tiny">${fmtM(Math.round(c.gain))} sur ${fmtKm1(c.len)}</span></span><span class="mono strong">${fmtGrade(c.avg)}</span></div>`)}</div>`)}
@@ -388,7 +388,7 @@ function GpxModal() {
       <li><span>Touche <b>Envoyer vers l'appareil</b> et synchronise ta montre.</span></li>
       <li><span>Sur la montre : lance l'activité, puis <b>Navigation → Parcours</b>.</span></li>
     </ol>
-    ${Fold('gpxpc', 'Depuis un ordinateur', html`<p class="small">Sur connect.garmin.com : <b>Entraînement et planification → Parcours → Importer</b>, choisis le fichier, puis envoie-le à la montre.</p>`)}
+    ${Fold('gpxpc', 'Sans téléphone (ordinateur + Wi-Fi)', html`<p class="small">Sur un ordinateur, ouvre <a class="link" href="https://connect.garmin.com/" target="_blank" rel="noopener">connect.garmin.com</a> : <b>Entraînement et planification → Parcours → Importer</b>, choisis le fichier, puis <b>Envoyer vers l'appareil</b>. Si ta montre a le Wi-Fi, elle le récupère toute seule à la prochaine synchronisation, sans le téléphone.</p><p class="tiny muted">Garmin réserve l'envoi direct vers la montre aux applications d'entreprise agréées : le passage par Garmin Connect est obligatoire.</p>`)}
     <button class="btn btn-secondary btn-block" data-act="gpx-again">${icon('download')}Télécharger à nouveau</button>`;
 }
 function SearchModal() {

@@ -12,7 +12,19 @@ function loadBrief(b) {
   S.mode = 'seance';
   applyTheme();
 }
+async function runProbe() {
+  const out = {};
+  const within = (p, ms) => Promise.race([p, new Promise((r) => setTimeout(() => r('timeout'), ms))]);
+  out.fetch = await within(fetch(API.ign + '/geocodage/search?q=Plan-d%27Aups&limit=1').then((r) => 'ok ' + r.status).catch(() => 'blocked'), 8000);
+  out.post = await within(fetch(API.ign + '/altimetrie/1.0/calcul/alti/rest/elevation.json', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ lon: '5.75', lat: '43.33', resource: 'ign_rge_alti_wld', zonly: 'true' }) }).then((r) => 'ok ' + r.status).catch(() => 'blocked'), 8000);
+  try { out.geo = (await navigator.permissions.query({ name: 'geolocation' })).state; } catch (e) { out.geo = 'n/a'; }
+  try { out.geoPolicy = document.featurePolicy ? String(document.featurePolicy.allowsFeature('geolocation')) : 'n/a'; } catch (e) { out.geoPolicy = 'err'; }
+  try { localStorage.setItem('atelier:probe', '1'); out.ls = 'ok'; } catch (e) { out.ls = 'blocked'; }
+  out.origin = String(self.origin);
+  try { parent.postMessage({ atelierProbe: out }, '*'); } catch (e) { /* rien */ }
+}
 function boot() {
+  if (location.hash === '#probe' && window.parent !== window) { runProbe(); return; }
   loadAll();
   const h = readHash();
   if (h.brief) loadBrief(h.brief);
