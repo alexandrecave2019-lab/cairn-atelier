@@ -219,7 +219,7 @@ p { margin: 0; }
 .title-pill .t { min-width: 0; display: flex; flex-direction: column; line-height: 1.1; }
 .title-pill .t b { font-weight: 750; font-stretch: 86%; font-size: 1.02rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .title-pill .t span { font-family: var(--font-mono); font-size: 0.68rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--fg-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.title-pill .logo { width: 24px; height: 24px; color: var(--fg); }
+.title-pill .logo { width: 30px; height: 30px; flex: none; }
 .maptools {
   position: absolute;
   right: max(10px, env(safe-area-inset-right, 0px));

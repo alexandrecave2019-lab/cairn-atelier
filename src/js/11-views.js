@@ -9,6 +9,7 @@ const MODES = [
   { id: 'mes', label: 'Enregistrés', ic: 'save' },
 ];
 const SLOT = ['a', 'b', 'c'];
+const LOGO_SVG = '<svg viewBox="0 0 512 512" aria-hidden="true"><rect width="512" height="512" rx="112" fill="#172024"/><ellipse cx="256" cy="398" rx="152" ry="44" fill="#C9D1D4"/><ellipse cx="250" cy="322" rx="120" ry="38" fill="#8F9AA0" transform="rotate(-3 250 322)"/><ellipse cx="262" cy="256" rx="90" ry="32" fill="#DCE2E4" transform="rotate(4 262 256)"/><ellipse cx="252" cy="200" rx="62" ry="26" fill="#A9B4B8" transform="rotate(-6 252 200)"/><ellipse cx="258" cy="154" rx="34" ry="21" fill="#7BBCE8"/></svg>';
 
 function App() {
   return html`${TopBar()}${MapTools()}${S.ui.pick ? PickBar() : ''}${Panel()}${Modal()}${Toast()}`;
@@ -21,7 +22,7 @@ function TopBar() {
   const back = (b && b.back) || CAIRN_URL;
   return html`<header class="topbar">
     <a class="fab glass" href="${back}" aria-label="Retour à CAIRN">${icon('back')}</a>
-    <div class="title-pill glass">${icon('cairn', 'logo')}<span class="t"><b>${titles[S.mode]}</b><span>${sub}</span></span></div>
+    <div class="title-pill glass">${raw(LOGO_SVG.replace('<svg ', '<svg class="logo" '))}<span class="t"><b>${titles[S.mode]}</b><span>${sub}</span></span></div>
     <button class="fab glass" data-act="settings" aria-label="Réglages">${icon('gear')}</button>
   </header>`;
 }
