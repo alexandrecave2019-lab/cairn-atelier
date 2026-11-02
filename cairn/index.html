@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>CAIRN</title>
+<meta name="description" content="Installe CAIRN sur ton écran d'accueil.">
+<meta name="theme-color" content="#172024">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="../icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="../icon-192.png">
+<script>
+  // Ouvert depuis l'écran d'accueil : on va directement dans CAIRN.
+  var CAIRN_URL = 'https://claude.ai/artifact/17z7YGzWzaqGGUbwNtn7N4';
+  var standalone = (window.matchMedia && matchMedia('(display-mode: standalone)').matches) || navigator.standalone === true;
+  if (standalone || /[?&]launch=1/.test(location.search)) location.replace(CAIRN_URL);
+</script>
+<style>
+  :root { color-scheme: dark; }
+  * { box-sizing: border-box; }
+  body { margin: 0; min-height: 100vh; background: #172024; color: #F2F5F6; font-family: "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; display: flex; align-items: center; justify-content: center; padding: 24px 16px; }
+  main { width: 100%; max-width: 420px; display: flex; flex-direction: column; align-items: center; gap: 18px; text-align: center; }
+  .logo { width: 112px; height: 112px; }
+  h1 { margin: 0; font-size: 1.9rem; letter-spacing: 0.3em; padding-left: 0.3em; font-weight: 800; }
+  p { margin: 0; color: #9AA8AE; line-height: 1.45; }
+  .btn { display: inline-flex; align-items: center; justify-content: center; min-height: 52px; width: 100%; border-radius: 14px; border: 0; font: inherit; font-weight: 700; font-size: 1.05rem; text-decoration: none; cursor: pointer; }
+  .primary { background: #7BBCE8; color: #071219; }
+  .secondary { background: transparent; color: #F2F5F6; border: 1px solid #37444A; }
+  ol { margin: 0; padding: 14px 16px 14px 34px; text-align: left; background: #141B1E; border: 1px solid #232D32; border-radius: 14px; color: #E3E9EB; line-height: 1.5; width: 100%; }
+  li + li { margin-top: 6px; }
+  b { color: #F2F5F6; }
+  [hidden] { display: none !important; }
+</style>
+</head>
+<body>
+<main>
+  <svg class="logo" viewBox="0 0 512 512" role="img" aria-label="Logo CAIRN"><rect width="512" height="512" rx="112" fill="#0F1619"/><ellipse cx="256" cy="398" rx="152" ry="44" fill="#C9D1D4"/><ellipse cx="250" cy="322" rx="120" ry="38" fill="#8F9AA0" transform="rotate(-3 250 322)"/><ellipse cx="262" cy="256" rx="90" ry="32" fill="#DCE2E4" transform="rotate(4 262 256)"/><ellipse cx="252" cy="200" rx="62" ry="26" fill="#A9B4B8" transform="rotate(-6 252 200)"/><ellipse cx="258" cy="154" rx="34" ry="21" fill="#7BBCE8"/></svg>
+  <h1>CAIRN</h1>
+  <p>Mets CAIRN sur ton écran d'accueil avec son logo. Un appui l'ouvre directement.</p>
+  <button class="btn primary" id="install" hidden>Installer CAIRN</button>
+  <ol id="steps">
+    <li><b>Android (Chrome)</b> : menu ⋮ → <b>Installer l'application</b> (ou « Ajouter à l'écran d'accueil »).</li>
+    <li><b>iPhone (Safari)</b> : bouton Partager → <b>Sur l'écran d'accueil</b>.</li>
+    <li>Supprime ensuite l'ancien raccourci CAIRN.</li>
+  </ol>
+  <a class="btn secondary" href="https://claude.ai/artifact/17z7YGzWzaqGGUbwNtn7N4">Ouvrir CAIRN</a>
+</main>
+<script>
+  if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(function () {});
+  var evt = null;
+  var btn = document.getElementById('install');
+  window.addEventListener('beforeinstallprompt', function (e) { e.preventDefault(); evt = e; btn.hidden = false; });
+  btn.addEventListener('click', function () { if (!evt) return; evt.prompt(); evt.userChoice.finally(function () { evt = null; btn.hidden = true; }); });
+  window.addEventListener('appinstalled', function () { btn.hidden = true; document.getElementById('steps').innerHTML = '<li>C’est installé : l’icône CAIRN est sur ton écran d’accueil. Tu peux supprimer l’ancien raccourci.</li>'; });
+</script>
+</body>
+</html>
