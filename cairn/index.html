@@ -7,8 +7,9 @@
 <meta name="description" content="Installe CAIRN sur ton écran d'accueil.">
 <meta name="theme-color" content="#172024">
 <link rel="manifest" href="manifest.webmanifest">
-<link rel="icon" href="../icon.svg" type="image/svg+xml">
-<link rel="apple-touch-icon" href="../icon-192.png">
+<link rel="icon" href="cairn.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="cairn-192.png">
+<meta name="apple-mobile-web-app-title" content="CAIRN">
 <script>
   // Ouvert depuis l'écran d'accueil : on va directement dans CAIRN.
   var CAIRN_URL = 'https://claude.ai/artifact/17z7YGzWzaqGGUbwNtn7N4';
@@ -29,6 +30,8 @@
   ol { margin: 0; padding: 14px 16px 14px 34px; text-align: left; background: #141B1E; border: 1px solid #232D32; border-radius: 14px; color: #E3E9EB; line-height: 1.5; width: 100%; }
   li + li { margin-top: 6px; }
   b { color: #F2F5F6; }
+  .warn { width: 100%; text-align: left; background: #2A2418; border: 1px solid #5A4A26; border-radius: 14px; padding: 14px 16px; color: #F1E6CC; line-height: 1.5; }
+  .warn strong { display: block; margin-bottom: 4px; color: #FFE7A8; }
   [hidden] { display: none !important; }
 </style>
 </head>
@@ -37,21 +40,46 @@
   <svg class="logo" viewBox="0 0 512 512" role="img" aria-label="Logo CAIRN"><rect width="512" height="512" rx="112" fill="#0F1619"/><ellipse cx="256" cy="398" rx="152" ry="44" fill="#C9D1D4"/><ellipse cx="250" cy="322" rx="120" ry="38" fill="#8F9AA0" transform="rotate(-3 250 322)"/><ellipse cx="262" cy="256" rx="90" ry="32" fill="#DCE2E4" transform="rotate(4 262 256)"/><ellipse cx="252" cy="200" rx="62" ry="26" fill="#A9B4B8" transform="rotate(-6 252 200)"/><ellipse cx="258" cy="154" rx="34" ry="21" fill="#7BBCE8"/></svg>
   <h1>CAIRN</h1>
   <p>Mets CAIRN sur ton écran d'accueil avec son logo. Un appui l'ouvre directement.</p>
+
+  <div class="warn" id="old" hidden>
+    <strong>L'ancien Atelier bloque l'installation</strong>
+    Désinstalle-le d'abord : appui long sur son icône → <b>Désinstaller</b>. Reviens ensuite sur cette page.
+  </div>
+
   <button class="btn primary" id="install" hidden>Installer CAIRN</button>
+
   <ol id="steps">
     <li><b>Android (Chrome)</b> : menu ⋮ → <b>Installer l'application</b> (ou « Ajouter à l'écran d'accueil »).</li>
     <li><b>iPhone (Safari)</b> : bouton Partager → <b>Sur l'écran d'accueil</b>.</li>
     <li>Supprime ensuite l'ancien raccourci CAIRN.</li>
   </ol>
+
+  <div class="warn" id="help" hidden>
+    <strong>Pas d'option « Installer » ?</strong>
+    1. Si l'Atelier est sur ton téléphone, désinstalle-le (appui long → Désinstaller).<br>
+    2. Ouvre cette page dans <b>Chrome</b>, pas depuis l'appli Claude : menu ⋮ → <b>Ouvrir dans Chrome</b>.<br>
+    3. Recharge la page.
+  </div>
+
   <a class="btn secondary" href="https://claude.ai/artifact/17z7YGzWzaqGGUbwNtn7N4">Ouvrir CAIRN</a>
 </main>
 <script>
   if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(function () {});
   var evt = null;
   var btn = document.getElementById('install');
-  window.addEventListener('beforeinstallprompt', function (e) { e.preventDefault(); evt = e; btn.hidden = false; });
+  var help = document.getElementById('help');
+  var old = document.getElementById('old');
+  var ios = /iPhone|iPad|iPod/.test(navigator.userAgent);
+  window.addEventListener('beforeinstallprompt', function (e) { e.preventDefault(); evt = e; btn.hidden = false; help.hidden = true; });
   btn.addEventListener('click', function () { if (!evt) return; evt.prompt(); evt.userChoice.finally(function () { evt = null; btn.hidden = true; }); });
-  window.addEventListener('appinstalled', function () { btn.hidden = true; document.getElementById('steps').innerHTML = '<li>C’est installé : l’icône CAIRN est sur ton écran d’accueil. Tu peux supprimer l’ancien raccourci.</li>'; });
+  window.addEventListener('appinstalled', function () { btn.hidden = true; help.hidden = true; old.hidden = true; document.getElementById('steps').innerHTML = '<li>C’est installé : l’icône CAIRN est sur ton écran d’accueil. Tu peux supprimer l’ancien raccourci.</li>'; });
+  // L'ancien Atelier (installé à la racine du site) empêche Chrome de proposer l'installation.
+  if (navigator.getInstalledRelatedApps) {
+    navigator.getInstalledRelatedApps().then(function (apps) {
+      if (apps && apps.some(function (a) { return a.platform === 'webapp' && /\/cairn-atelier\/manifest\.webmanifest$/.test(a.url || ''); })) { old.hidden = false; help.hidden = true; }
+    }).catch(function () {});
+  }
+  if (!ios) setTimeout(function () { if (!evt && old.hidden) help.hidden = false; }, 4000);
 </script>
 </body>
 </html>
