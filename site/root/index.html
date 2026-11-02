@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>CAIRN Atelier parcours</title>
+<meta name="theme-color" content="#172024">
+<script>
+  // L'Atelier a déménagé dans /atelier/ : on garde la séance transmise par CAIRN (#s=…).
+  location.replace('atelier/' + location.search + location.hash);
+</script>
+<style>
+  :root { color-scheme: dark; }
+  body { margin: 0; min-height: 100vh; background: #172024; color: #F2F5F6; font-family: "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; display: flex; align-items: center; justify-content: center; padding: 24px 16px; }
+  main { max-width: 420px; display: flex; flex-direction: column; gap: 14px; text-align: center; }
+  a { display: block; padding: 14px; border-radius: 14px; background: #7BBCE8; color: #071219; font-weight: 700; text-decoration: none; }
+  a.alt { background: transparent; color: #F2F5F6; border: 1px solid #37444A; }
+</style>
+</head>
+<body>
+<main>
+  <p>L'Atelier a changé d'adresse.</p>
+  <a href="atelier/">Ouvrir l'Atelier</a>
+  <a class="alt" href="cairn/">Installer CAIRN sur l'écran d'accueil</a>
+</main>
+</body>
+</html>

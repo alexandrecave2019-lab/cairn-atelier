@@ -34,6 +34,7 @@ DIST.mkdir(parents=True, exist_ok=True)
 (DIST / "index.html").write_text(page, encoding="utf-8")
 
 manifest = {
+    "id": "./",
     "name": "CAIRN Atelier parcours",
     "short_name": "Atelier",
     "description": "Boucles calées sur tes séances, côtes, tracé à la main et export GPX vers Garmin.",

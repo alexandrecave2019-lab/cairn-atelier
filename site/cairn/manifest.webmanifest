@@ -1,0 +1,21 @@
+{
+ "id": "./?app=cairn",
+ "name": "CAIRN",
+ "short_name": "CAIRN",
+ "description": "CAIRN, coach d'entraînement trail",
+ "lang": "fr",
+ "start_url": "./?launch=1",
+ "scope": "./",
+ "display": "standalone",
+ "background_color": "#172024",
+ "theme_color": "#172024",
+ "icons": [
+  {"src": "cairn-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any"},
+  {"src": "cairn-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any"},
+  {"src": "cairn-maskable.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable"},
+  {"src": "cairn.svg", "sizes": "any", "type": "image/svg+xml"}
+ ],
+ "related_applications": [
+  {"platform": "webapp", "url": "https://alexandrecave2019-lab.github.io/cairn-atelier/manifest.webmanifest"}
+ ]
+}
